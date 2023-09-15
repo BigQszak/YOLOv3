@@ -11,3 +11,5 @@ authors = [{ name = "BigQszak"}]
 
 [project.scripts]
 hello_cli = "YOLOV3.__main__:main"
+
+packages = ["utils", "YOLO_V3"]
