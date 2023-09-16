@@ -81,6 +81,15 @@ class ScalePrediction(nn.Module):
             .reshape(x.shape[0], 3, self.num_classes + 5, x.shape[2], x.shape[3])
             .permute(0, 1, 3, 4, 2)
         )
+        """
+            self.prediction(x) -> calls the model architecture method passing our input (image) to make prediction
+            x.shape[0] -> batch dimension
+            3: three different bboxes 
+            self.num_classes + 5: classes and bbox parameters
+            x.shape[2] & x.shape[3]: width and hight of the image
+            permute(): changes the order of the tensors dimensions
+
+        """
         # N(batch) x 13x13(grid at one scale) x 3(anchors per cell) x  5(bbox)+num_classes
 
 
