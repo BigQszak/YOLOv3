@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 
 
-def test(model):
+def test_model(config: list, model):
     num_classes = 20
     IMAGE_SIZE = 416
-    model = model(num_classes=num_classes)
+    model = model(num_classes=num_classes, config=config)
     x = torch.randn((2, 3, IMAGE_SIZE, IMAGE_SIZE))  # batch_size, RGB, spatial_dim
     out = model(x)
 
