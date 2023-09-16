@@ -173,7 +173,7 @@ class YOLOv3(nn.Module):
 
         return outputs
 
-def test(config: list):
+def test_model(config: list):
     num_classes = 20
     IMAGE_SIZE = 416
     model = YOLOv3(num_classes=num_classes, config=config)
@@ -204,6 +204,5 @@ def test(config: list):
     print("Test completed successfully")
 
 if __name__ == "__main__":
-
-    test(return_model_config())
+    test_model(return_model_config())
 
