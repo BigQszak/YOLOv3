@@ -83,10 +83,10 @@ class ScalePrediction(nn.Module):
         )
         """
             self.prediction(x) -> calls the model architecture method passing our input (image) to make prediction
-            x.shape[0] -> batch dimension
-            3: three different bboxes 
-            self.num_classes + 5: classes and bbox parameters
-            x.shape[2] & x.shape[3]: width and hight of the image
+            x.shape[0] -> batch size
+            3: three different bboxes - anchors
+            self.num_classes + 5: classes and bbox parameters per grid cell
+            x.shape[2] & x.shape[3]: grid size
             permute(): changes the order of the tensors dimensions
 
         """
