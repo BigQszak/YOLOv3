@@ -1,0 +1,15 @@
+[build-system]
+requires = ["", ""]
+build-backend = ""
+
+[project]
+name = "YOLOV3"
+version = "0.0.1"
+description = "Yolov3 implementation from scratch with PyTorch and Lightning"
+readme = "README.md"
+authors = [{ name = "BigQszak"}]
+
+[project.scripts]
+hello_cli = "YOLOV3.__main__:main"
+#packages = "utils", "YOLO_V3"
+model_test = YOLO_V3.tests
