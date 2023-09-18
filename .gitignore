@@ -110,3 +110,9 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Exclude data
+/data/
+
+# Jupter NB Checkpoints
+.ipynb_checkpoints/
