@@ -4,6 +4,9 @@ import torch.nn as nn
 from utils import intersection_over_union as iou
 
 class YOLOLoss(nn.Module):
+    """    
+    Calculating loss for a single scale prediction
+    """
     def __init__(self):
         super().__init__()
         self.mse = nn.MSELoss()
