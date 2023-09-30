@@ -3,5 +3,8 @@
     "editor.defaultFormatter": "ms-python.black-formatter"
   },
   "python.formatting.provider": "black",
-  "python.analysis.extraPaths": ["./utils"]
+  "python.analysis.extraPaths": [
+    "./utils"
+  ],
+  "cSpell.blockCheckingWhenLineLengthGreaterThan": 79
 }
