@@ -28,10 +28,27 @@ def intersection_over_union(
     boxes_preds: torch.Tensor, boxes_labels: torch.Tensor, box_format: str = "midpoint"
 ):
     """
-    This function calculates intersection over union (iou) given pred boxes
+    This function calculates intersection over union (iou) given prediction boxes
     and target boxes.
+    IoU is a metric for evaluation bounding box predictions - that is how closed to
+    the ground truth a specific predicted box is.
+        Intersection - measures the overlap between boxes - common area.
+        Union - measures the combined area of two boxes
+    It is a value between 0 and 1. The higher the value the better the prediction.
+    IoU > 0.5 is a good threshold.
+    IoU > 0.7 is a very good threshold.
+    IoU > 0.9 is an excellent threshold.
 
-    Parameters:
+    Remember that in computer graphics the origin is in the top left corner (growing to the right and downwards).
+
+    Depending of the bounding box format we get the bounding box values differently.
+
+    Intersection area:
+    x1 is the top let corner of the "intersection box", thus must be the largest value of the two boxes corners
+    x2 is the bottom right corner of the "intersection box", thus must be the smallest value of the two boxes corners
+    Similar with y values, y1 is top left and y2 is bottom right.
+
+    Args:
         boxes_preds (tensor): Predictions of Bounding Boxes (BATCH_SIZE, 4)
         boxes_labels (tensor): Correct labels of Bounding Boxes (BATCH_SIZE, 4)
         box_format (str): midpoint/corners, if boxes (x,y,w,h) or (x1,y1,x2,y2)
@@ -41,10 +58,15 @@ def intersection_over_union(
     """
 
     if box_format == "midpoint":
+        # Calculating the corners of both boxes based on their centerpoint, width and hight
+        # Division by 2 of width and hight is to get the corners (midpoint - half of the width and hight)
         box1_x1 = boxes_preds[..., 0:1] - boxes_preds[..., 2:3] / 2
+        # [..., ] means all the previous dimensions (bathch_size - all the predictions)
         box1_y1 = boxes_preds[..., 1:2] - boxes_preds[..., 3:4] / 2
         box1_x2 = boxes_preds[..., 0:1] + boxes_preds[..., 2:3] / 2
         box1_y2 = boxes_preds[..., 1:2] + boxes_preds[..., 3:4] / 2
+        # we want to maintain the tensor dimensionality (N, 1)
+
         box2_x1 = boxes_labels[..., 0:1] - boxes_labels[..., 2:3] / 2
         box2_y1 = boxes_labels[..., 1:2] - boxes_labels[..., 3:4] / 2
         box2_x2 = boxes_labels[..., 0:1] + boxes_labels[..., 2:3] / 2
@@ -55,28 +77,35 @@ def intersection_over_union(
         box1_y1 = boxes_preds[..., 1:2]
         box1_x2 = boxes_preds[..., 2:3]
         box1_y2 = boxes_preds[..., 3:4]
+
         box2_x1 = boxes_labels[..., 0:1]
         box2_y1 = boxes_labels[..., 1:2]
         box2_x2 = boxes_labels[..., 2:3]
         box2_y2 = boxes_labels[..., 3:4]
 
+    # Intersection Area
     x1 = torch.max(box1_x1, box2_x1)
     y1 = torch.max(box1_y1, box2_y1)
     x2 = torch.min(box1_x2, box2_x2)
     y2 = torch.min(box1_y2, box2_y2)
 
     intersection = (x2 - x1).clamp(0) * (y2 - y1).clamp(0)
+    # .clamp(0) covers the case when the boxes do not inteersect at all
+
+    # Union Area
     box1_area = abs((box1_x2 - box1_x1) * (box1_y2 - box1_y1))
     box2_area = abs((box2_x2 - box2_x1) * (box2_y2 - box2_y1))
 
-    return intersection / (box1_area + box2_area - intersection + 1e-6)
+    return intersection / (
+        box1_area + box2_area - intersection + 1e-6
+    )  # 1e-6 for numerical stability
 
 
 def non_max_suppression(bboxes, iou_threshold, threshold, box_format="corners"):
     """
     Does Non Max Suppression given bboxes
 
-    Parameters:
+    Args:
         bboxes (list): list of lists containing all bboxes with each bboxes
         specified as [class_pred, prob_score, x1, y1, x2, y2]
         iou_threshold (float): threshold where predicted bboxes is correct
@@ -119,7 +148,7 @@ def mean_average_precision(
     """
     This function calculates mean average precision (mAP)
 
-    Parameters:
+    Args:
         pred_boxes (list): list of lists containing all bboxes with each bboxes
         specified as [train_idx, class_prediction, prob_score, x1, y1, x2, y2]
         true_boxes (list): Similar as pred_boxes except all the correct ones
