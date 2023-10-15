@@ -1,8 +1,7 @@
 import torch
 import torch.nn as nn
-
-import lightning as pl
 from model_config import return_model_config
+
 
 class ConvBlock(nn.Module):
     def __init__(
@@ -182,6 +181,7 @@ class YOLOv3(nn.Module):
 
         return outputs
 
+
 def test_model(config: list):
     num_classes = 20
     IMAGE_SIZE = 416
@@ -212,6 +212,6 @@ def test_model(config: list):
     )
     print("Test completed successfully")
 
+
 if __name__ == "__main__":
     test_model(return_model_config())
-
