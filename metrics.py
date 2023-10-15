@@ -7,12 +7,14 @@ import utils
 
 def iou_width_height(boxes1, boxes2):
     """
-    Parameters:
+    Args:
         boxes1 (tensor): width and height of the first bounding boxes
         boxes2 (tensor): width and height of the second bounding boxes
+
     Returns:
         tensor: Intersection over union of the corresponding boxes
     """
+
     intersection = torch.min(boxes1[..., 0], boxes2[..., 0]) * torch.min(
         boxes1[..., 1], boxes2[..., 1]
     )
@@ -228,6 +230,9 @@ def get_evaluation_bboxes(
     box_format="midpoint",
     device="cuda",
 ):
+    """
+    Converts the predicted boxes from the test data to a readable format
+    """
     # make sure model is in eval before get bboxes
     model.eval()
     train_idx = 0

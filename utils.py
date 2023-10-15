@@ -186,14 +186,17 @@ def get_loaders(train_csv_path, test_csv_path):
 
 def cells_to_bboxes(predictions, anchors, S, is_preds=True):
     """
+
     Scales the predictions coming from the model to
-    be relative to the entire image such that they for example later
-    can be plotted or.
+    be relative to the entire image so that they can be plotted later.
+    Also we need them in such format for calculating map & nms.
+
     INPUT:
     predictions: tensor of size (N, 3, S, S, num_classes+5)
     anchors: the anchors used for the predictions
     S: the number of cells the image is divided in on the width (and height)
     is_preds: whether the input is predictions or the true bounding boxes
+
     OUTPUT:
     converted_bboxes: the converted boxes of sizes (N, num_anchors, S, S, 1+5) with class index,
                       object score, bounding box coordinates
