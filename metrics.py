@@ -8,8 +8,8 @@ import utils
 def iou_width_height(boxes1, boxes2):
     """
     Args:
-        boxes1 (tensor): width and height of the first bounding boxes
-        boxes2 (tensor): width and height of the second bounding boxes
+        boxes1 (tensor): width and height of the first bounding box
+        boxes2 (tensor): width and height of the second bounding box
 
     Returns:
         tensor: Intersection over union of the corresponding boxes
@@ -17,10 +17,10 @@ def iou_width_height(boxes1, boxes2):
 
     intersection = torch.min(boxes1[..., 0], boxes2[..., 0]) * torch.min(
         boxes1[..., 1], boxes2[..., 1]
-    )
+    )  # minimum of width & hight
     union = (
         boxes1[..., 0] * boxes1[..., 1] + boxes2[..., 0] * boxes2[..., 1] - intersection
-    )
+    )  # summing the areas of both boxes and subtracting the intersection
     return intersection / union
 
 
@@ -101,43 +101,73 @@ def intersection_over_union(
     )  # 1e-6 for numerical stability
 
 
-def non_max_suppression(bboxes, iou_threshold, threshold, box_format="corners"):
+def non_max_suppression(bboxes, iou_threshold, prob_threshold, box_format="corners"):
     """
-    Does Non Max Suppression given bboxes
+    Performs Non Max Suppression given list of bounding boxes.
+    NMS is an algorithm that removes overlapping bounding boxes.
+    It utilises the Intersection over Union (IoU) metric to find overlapping.
+
+    Detection results in plenty of bounding boxes, but we want to end up in one - best one
+    per object.
+
+    We can start by discarding boxes below some probabiliy threshold (of having an object inside)
+    For each object class in the image:
+        Each box assosiated with it comes with probabilty of the object being in that box.
+        We take the one with the highest one and calculate its iou with the second best one.
+        If the iou is higher than the threshold it means that those two boxes are responsible for
+        detecting the same object, however one is better than the other.
+        We discard the "weaker" box.
+        If the iou is lower than the threshold it means the sexond box is responsible for detecting
+        other instance of that class and we skip it.
+        We repeat the process until we run out of boxes.
+        At the end we "save" out main box and continue with the process with the new box
+        with highest probabilty.
+
 
     Args:
-        bboxes (list): list of lists containing all bboxes with each bboxes
+        bboxes (list): list of lists, each list represents one bounding box
         specified as [class_pred, prob_score, x1, y1, x2, y2]
         iou_threshold (float): threshold where predicted bboxes is correct
         threshold (float): threshold to remove predicted bboxes (independent of IoU)
         box_format (str): "midpoint" or "corners" used to specify bboxes
 
     Returns:
-        list: bboxes after performing NMS given a specific IoU threshold
+        list: bboxes after performing NMS for a specific IoU threshold
     """
 
-    assert type(bboxes) == list
+    assert type(bboxes) == list, "Argument bboxes should be a list"
 
-    bboxes = [box for box in bboxes if box[1] > threshold]
+    # removing boxes with prob less than threshold
+    bboxes = [box for box in bboxes if box[1] > prob_threshold]
+
+    # sort boxes by probability descending
     bboxes = sorted(bboxes, key=lambda x: x[1], reverse=True)
     bboxes_after_nms = []
 
+    # until we run out of boxes
     while bboxes:
+        # choose the box with the highest prob score
         chosen_box = bboxes.pop(0)
 
+        # compare out main box with
         bboxes = [
             box
             for box in bboxes
-            if box[0] != chosen_box[0]
+            if box[0]
+            != chosen_box[
+                0
+            ]  # if the boxes are of different classes we do not want to compare them - keep the box
             or intersection_over_union(
                 torch.tensor(chosen_box[2:]),
                 torch.tensor(box[2:]),
-                box_format=box_format,
+                box_format=box_format,  # calculating iou between boxes, taking only box dimensions
             )
-            < iou_threshold
+            < iou_threshold  # if the iou is lower than the threshold we keep the box
         ]
 
-        bboxes_after_nms.append(chosen_box)
+        bboxes_after_nms.append(
+            chosen_box
+        )  # we append out list of cleaned boxes with the chosen one
 
     return bboxes_after_nms
 
@@ -146,7 +176,7 @@ def mean_average_precision(
     pred_boxes, true_boxes, iou_threshold=0.5, box_format="midpoint", num_classes=20
 ):
     """
-    This function calculates mean average precision (mAP)
+    Function for calculates mean average precision (mAP) metric.
 
     Args:
         pred_boxes (list): list of lists containing all bboxes with each bboxes
