@@ -68,9 +68,6 @@ class CustomDataset(Dataset):
             iou_anchors = iou(
                 torch.tensor(box[2:4]), self.anchors
             )  # we are sending width & height of the bbox
-            """
-             TO_DO: implement iou()
-            """
             anchor_indices = iou_anchors.argsort(descending=True, dim=0)  # best anchors
             x, y, width, height, class_label = box  # from loaded box
             has_anchor = [False] * 3
@@ -100,10 +97,8 @@ class CustomDataset(Dataset):
                     targets[scale_idx][anchors_on_scale, grid_y, grid_x, 5] = int(
                         class_label
                     )
+                    has_anchor[scale_idx] = True
 
-                    """ 
-                    Change has_anchor to True
-                    """
                 elif (
                     not anchor_chosen
                     and iou_anchors[anchor_idx] > self.ignore_iou_thresh
