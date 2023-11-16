@@ -18,15 +18,6 @@ $ cd YOLOv3/
 $ pip install requirements.txt
 ```
 
-### Download pretrained weights on Pascal-VOC
-TO DO
-
-### Download Pascal VOC dataset
-TO DO
-
-### Download MS COCO dataset
-TO DO
-
 ### Training
 Edit the config.py file to match the setup you want to use. 
 Then run train.py
