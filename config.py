@@ -1,10 +1,11 @@
 import albumentations as A
 import cv2
 import torch
+import os
 
 from albumentations.pytorch import ToTensorV2
 
-DATASET = "PASCAL_VOC"
+DATASET = "PASCAL_VOC"  # choose between PASCAL_VOC and COCO or other
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 NUM_WORKERS = 2
 BATCH_SIZE = 32
@@ -20,9 +21,13 @@ S = [IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8]  # grid size 13, 26, 5
 PIN_MEMORY = True
 LOAD_MODEL = False
 SAVE_MODEL = True
-CHECKPOINT_FILE = "checkpoint.pth.tar"
-IMG_DIR = DATASET + "/images/"
-LABEL_DIR = DATASET + "/labels/"
+CHECKPOINT_FILE = os.path.join(
+    os.path.dirname(__file__), "checkpoints", "best_checkpoint.pth.tar"
+)
+
+IMG_DIR = os.path.join(os.path.dirname(__file__), DATASET, "/images/")
+LABEL_DIR = os.path.join(os.path.dirname(__file__), DATASET, "/labels/")
+
 
 ANCHORS = [
     [(0.28, 0.22), (0.38, 0.48), (0.9, 0.78)],

@@ -4,9 +4,11 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
 import torch
+import os
 
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from dataset import YOLODataset
 
 
 def plot_image(image, boxes):
@@ -106,13 +108,15 @@ def get_mean_std(loader):
     return mean, std
 
 
-def save_checkpoint(model, optimizer, filename="my_checkpoint.pth.tar"):
+def save_checkpoint(model, optimizer, filename):  # "my_checkpoint.pth.tar"
     print("=> Saving checkpoint")
     checkpoint = {
         "state_dict": model.state_dict(),
         "optimizer": optimizer.state_dict(),
     }
-    torch.save(checkpoint, filename)
+    torch.save(
+        checkpoint, os.path.join(os.path.dirname(__file__), "checkpoints", filename)
+    )
 
 
 def load_checkpoint(checkpoint_file, model, optimizer, lr):
@@ -128,8 +132,6 @@ def load_checkpoint(checkpoint_file, model, optimizer, lr):
 
 
 def get_loaders(train_csv_path, test_csv_path):
-    from dataset import YOLODataset
-
     IMAGE_SIZE = config.IMAGE_SIZE
     train_dataset = YOLODataset(
         train_csv_path,
