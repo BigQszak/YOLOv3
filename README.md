@@ -31,8 +31,8 @@ TO DO
 3. Uses concatenations & additions of skip channels
 4. Each prediction scale is proceeded by several convolutional layers
 5. Implements bilinear interpolation upscaling after each prediction
-6. Opts 3 different bboxes for each grid cell - ability to predict more (smaller) objects
-7. Anchor boxes - predefined bboxes of different scales & size => adjusting those boxes instead fo coming up with completely new ones 
+6. Opts 3 different bboxes for each grid cell - the ability to predict more (smaller) objects
+7. Anchor boxes - predefined bboxes of different scales & sizes => adjusting those boxes instead of coming up with completely new ones 
     (9 in total, 3 for each grid cell at each prediction scale)
 
 ## Useful links
@@ -40,5 +40,6 @@ TO DO
 
 ## TO DO
 - [ ] Publish trained models
-- [ ] Update paths 
-- [ ] Implement interactive scripts for argument parsing 
+- [x] Update paths 
+- [ ] Implement interactive scripts for argument parsing
+- [ ] Debug training
