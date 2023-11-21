@@ -43,7 +43,7 @@ class CustomDataset(Dataset):
     def __len__(self) -> int:
         return len(self.annotations)
 
-    def __getitem__(self, index) -> Any:
+    def __getitem__(self, index):
         label_path = os.path.join(self.label_dir, self.annotations.iloc[index, 1])
         bboxes = np.roll(
             np.loadtxt(fname=label_path, delimiter=" ", ndmin=2), shift=4, axis=1
