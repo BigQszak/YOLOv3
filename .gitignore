@@ -121,3 +121,6 @@ $RECYCLE.BIN/
 /PASCAL_VOC
 /COCO
 /checkpoints
+
+# additional stuff
+/TODO.txt
