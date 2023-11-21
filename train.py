@@ -3,6 +3,7 @@ import torch.optim as optim
 import os
 
 import config
+import model_config
 from model import YOLOv3
 from tqdm import tqdm
 from metrics import mean_average_precision, get_evaluation_bboxes
@@ -10,11 +11,11 @@ from utils import (
     save_checkpoint,
     load_checkpoint,
     check_class_accuracy,
-    get_loaders,
     plot_couple_examples,
     cells_to_bboxes,
 )
 from loss import YOLOLoss
+from dataset import get_loaders
 
 torch.backends.cudnn.benchmark = True
 
@@ -51,7 +52,9 @@ def train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors):
 
 
 def main():
-    model = YOLOv3(num_classes=config.NUM_CLASSES).to(config.DEVICE)
+    model = YOLOv3(num_classes=config.NUM_CLASSES, config=model_config.config).to(
+        config.DEVICE
+    )
     optimizer = optim.Adam(
         model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY
     )
@@ -60,10 +63,10 @@ def main():
 
     train_loader, test_loader, train_eval_loader = get_loaders(
         train_csv_path=os.path.join(
-            os.path.dirname(__file__), config.DATASET, "/train.csv"
+            os.path.dirname(__file__), config.DATASET, "train.csv"
         ),
         test_csv_path=os.path.join(
-            os.path.dirname(__file__), config.DATASET, "/test.csv"
+            os.path.dirname(__file__), config.DATASET, "test.csv"
         ),
     )
 
@@ -73,7 +76,7 @@ def main():
 
     scaled_anchors = (
         torch.tensor(config.ANCHORS)
-        * torch.tensor(config.S).unsqueeze(1).unsqueeze(1).repeat(1, 2, 3)
+        * torch.tensor(config.S).unsqueeze(1).unsqueeze(1).repeat(1, 3, 2)
     ).to(config.DEVICE)
 
     best_map = 0.0

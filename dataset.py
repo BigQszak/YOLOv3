@@ -5,12 +5,14 @@ import torch
 
 from PIL import Image, ImageFile
 from torch.utils.data import Dataset, DataLoader
-from metrics import iou_width_height as iou, non_max_supression as nms
+from metrics import iou_width_height as iou
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+import config
 
-class CustomDataset(Dataset):
+
+class YOLODataset(Dataset):
     def __init__(
         self,
         csv_file: any,
@@ -92,7 +94,7 @@ class CustomDataset(Dataset):
                     )
 
                     targets[scale_idx][
-                        anchors_on_scale, grid_y, grid_x, 5
+                        anchors_on_scale, grid_y, grid_x, 1:5
                     ] = box_coordinates
                     targets[scale_idx][anchors_on_scale, grid_y, grid_x, 5] = int(
                         class_label
@@ -108,3 +110,98 @@ class CustomDataset(Dataset):
                     ] = -1  # ignore prediction
 
         return image, tuple(targets)
+
+
+def get_loaders(train_csv_path, test_csv_path):
+    IMAGE_SIZE = config.IMAGE_SIZE
+    train_dataset = YOLODataset(
+        csv_file=train_csv_path,
+        transform=config.train_transforms,
+        S=[IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8],
+        img_dir=config.IMG_DIR,
+        label_dir=config.LABEL_DIR,
+        anchors=config.ANCHORS,
+    )
+    test_dataset = YOLODataset(
+        csv_file=test_csv_path,
+        transform=config.test_transforms,
+        S=[IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8],
+        img_dir=config.IMG_DIR,
+        label_dir=config.LABEL_DIR,
+        anchors=config.ANCHORS,
+    )
+    train_loader = DataLoader(
+        dataset=train_dataset,
+        batch_size=config.BATCH_SIZE,
+        num_workers=config.NUM_WORKERS,
+        pin_memory=config.PIN_MEMORY,
+        shuffle=True,
+        drop_last=False,
+    )
+    test_loader = DataLoader(
+        dataset=test_dataset,
+        batch_size=config.BATCH_SIZE,
+        num_workers=config.NUM_WORKERS,
+        pin_memory=config.PIN_MEMORY,
+        shuffle=False,
+        drop_last=False,
+    )
+
+    train_eval_dataset = YOLODataset(
+        csv_file=train_csv_path,
+        transform=config.test_transforms,
+        S=[IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8],
+        img_dir=config.IMG_DIR,
+        label_dir=config.LABEL_DIR,
+        anchors=config.ANCHORS,
+    )
+    train_eval_loader = DataLoader(
+        dataset=train_eval_dataset,
+        batch_size=config.BATCH_SIZE,
+        num_workers=config.NUM_WORKERS,
+        pin_memory=config.PIN_MEMORY,
+        shuffle=False,
+        drop_last=False,
+    )
+
+    return train_loader, test_loader, train_eval_loader
+
+
+def test():
+    import utils
+    from metrics import non_max_suppression as nms
+
+    anchors = config.ANCHORS
+    transform = config.test_transforms
+
+    dataset = YOLODataset(
+        csv_file="PASCAL_VOC/train.csv",
+        img_dir="PASCAL_VOC/images",
+        label_dir="PASCAL_VOC/labels",
+        S=[13, 26, 52],
+        anchors=anchors,
+        transform=transform,
+    )
+
+    S = [13, 26, 52]
+    scaled_anchors = torch.tensor(anchors) / (
+        1 / torch.tensor(S).unsqueeze(1).unsqueeze(1).repeat(1, 3, 2)
+    )
+    loader = DataLoader(dataset=dataset, batch_size=1, shuffle=True)
+    for x, y in loader:
+        boxes = []
+
+        for i in range(y[0].shape[1]):
+            anchor = scaled_anchors[i]
+            print(anchor.shape)
+            print(y[i].shape)
+            boxes += utils.cells_to_bboxes(
+                y[i], is_preds=False, S=y[i].shape[2], anchors=anchor
+            )[0]
+        boxes = nms(boxes, iou_threshold=1, prob_threshold=0.7, box_format="midpoint")
+        print(boxes)
+        utils.plot_image(x[0].permute(1, 2, 0).to("cpu"), boxes)
+
+
+if __name__ == "__main__":
+    test()

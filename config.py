@@ -10,7 +10,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 NUM_WORKERS = 2
 BATCH_SIZE = 32
 IMAGE_SIZE = 416
-NUM_CLASSES = 20
+NUM_CLASSES = 20  # COCO has 80 classes
 LEARNING_RATE = 1e-5
 WEIGHT_DECAY = 1e-4
 NUM_EPOCHS = 100
@@ -25,8 +25,8 @@ CHECKPOINT_FILE = os.path.join(
     os.path.dirname(__file__), "checkpoints", "best_checkpoint.pth.tar"
 )
 
-IMG_DIR = os.path.join(os.path.dirname(__file__), DATASET, "/images/")
-LABEL_DIR = os.path.join(os.path.dirname(__file__), DATASET, "/labels/")
+IMG_DIR = os.path.join(os.path.dirname(__file__), DATASET, "images/")
+LABEL_DIR = os.path.join(os.path.dirname(__file__), DATASET, "labels/")
 
 
 ANCHORS = [
@@ -52,7 +52,7 @@ train_transforms = A.Compose(
                 A.ShiftScaleRotate(
                     rotate_limit=20, p=0.5, border_mode=cv2.BORDER_CONSTANT
                 ),
-                A.IAAAffine(shear=15, p=0.5, mode="constant"),
+                A.Affine(shear=15, p=0.5, mode="constant"),
             ],
             p=1.0,
         ),
