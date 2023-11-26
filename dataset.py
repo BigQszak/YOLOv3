@@ -5,12 +5,14 @@ import torch
 
 from PIL import Image, ImageFile
 from torch.utils.data import Dataset, DataLoader
-from metrics import iou_width_height as iou, non_max_supression as nms
+from metrics import iou_width_height as iou
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+import config
 
-class CustomDataset(Dataset):
+
+class YOLODataset(Dataset):
     def __init__(
         self,
         csv_file: any,
@@ -43,7 +45,7 @@ class CustomDataset(Dataset):
     def __len__(self) -> int:
         return len(self.annotations)
 
-    def __getitem__(self, index) -> Any:
+    def __getitem__(self, index):
         label_path = os.path.join(self.label_dir, self.annotations.iloc[index, 1])
         bboxes = np.roll(
             np.loadtxt(fname=label_path, delimiter=" ", ndmin=2), shift=4, axis=1
@@ -68,9 +70,6 @@ class CustomDataset(Dataset):
             iou_anchors = iou(
                 torch.tensor(box[2:4]), self.anchors
             )  # we are sending width & height of the bbox
-            """
-             TO_DO: implement iou()
-            """
             anchor_indices = iou_anchors.argsort(descending=True, dim=0)  # best anchors
             x, y, width, height, class_label = box  # from loaded box
             has_anchor = [False] * 3
@@ -95,15 +94,13 @@ class CustomDataset(Dataset):
                     )
 
                     targets[scale_idx][
-                        anchors_on_scale, grid_y, grid_x, 5
+                        anchors_on_scale, grid_y, grid_x, 1:5
                     ] = box_coordinates
                     targets[scale_idx][anchors_on_scale, grid_y, grid_x, 5] = int(
                         class_label
                     )
+                    has_anchor[scale_idx] = True
 
-                    """ 
-                    Change has_anchor to True
-                    """
                 elif (
                     not anchor_chosen
                     and iou_anchors[anchor_idx] > self.ignore_iou_thresh
@@ -113,3 +110,99 @@ class CustomDataset(Dataset):
                     ] = -1  # ignore prediction
 
         return image, tuple(targets)
+
+
+def get_loaders(train_csv_path, test_csv_path):
+    IMAGE_SIZE = config.IMAGE_SIZE
+    train_dataset = YOLODataset(
+        csv_file=train_csv_path,
+        transform=config.train_transforms,
+        S=[IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8],
+        img_dir=config.IMG_DIR,
+        label_dir=config.LABEL_DIR,
+        anchors=config.ANCHORS,
+    )
+    test_dataset = YOLODataset(
+        csv_file=test_csv_path,
+        transform=config.test_transforms,
+        S=[IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8],
+        img_dir=config.IMG_DIR,
+        label_dir=config.LABEL_DIR,
+        anchors=config.ANCHORS,
+    )
+    train_loader = DataLoader(
+        dataset=train_dataset,
+        batch_size=config.BATCH_SIZE,
+        num_workers=config.NUM_WORKERS,
+        pin_memory=config.PIN_MEMORY,
+        shuffle=True,
+        drop_last=False,
+    )
+    test_loader = DataLoader(
+        dataset=test_dataset,
+        batch_size=config.BATCH_SIZE,
+        num_workers=config.NUM_WORKERS,
+        pin_memory=config.PIN_MEMORY,
+        shuffle=False,
+        drop_last=False,
+    )
+
+    train_eval_dataset = YOLODataset(
+        csv_file=train_csv_path,
+        transform=config.test_transforms,
+        S=[IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8],
+        img_dir=config.IMG_DIR,
+        label_dir=config.LABEL_DIR,
+        anchors=config.ANCHORS,
+    )
+    train_eval_loader = DataLoader(
+        dataset=train_eval_dataset,
+        batch_size=config.BATCH_SIZE,
+        num_workers=config.NUM_WORKERS,
+        pin_memory=config.PIN_MEMORY,
+        shuffle=False,
+        drop_last=False,
+    )
+
+    return train_loader, test_loader, train_eval_loader
+
+
+def test():
+    import utils
+    from metrics import non_max_suppression as nms
+
+    anchors = config.ANCHORS
+    transform = config.test_transforms
+
+    dataset = YOLODataset(
+        csv_file="PASCAL_VOC/train.csv",
+        img_dir="PASCAL_VOC/images",
+        label_dir="PASCAL_VOC/labels",
+        S=[13, 26, 52],
+        anchors=anchors,
+        transform=transform,
+    )
+
+    S = [13, 26, 52]
+    scaled_anchors = torch.tensor(anchors) / (
+        1 / torch.tensor(S).unsqueeze(1).unsqueeze(1).repeat(1, 3, 2)
+    )
+    loader = DataLoader(dataset=dataset, batch_size=1, shuffle=True)
+    for x, y in loader:
+        boxes = []
+
+        for i in range(y[0].shape[1]):
+            anchor = scaled_anchors[i]
+            print(f"Anchor shape: {anchor.shape}")
+            print(f"y[i] shape: {y[i].shape}")
+            boxes += utils.cells_to_bboxes(
+                y[i], is_preds=False, S=y[i].shape[2], anchors=anchor
+            )[0]
+        boxes = nms(boxes, iou_threshold=1, prob_threshold=0.7, box_format="midpoint")
+        print(f"Boxes:", boxes)
+        utils.plot_image(x[0].permute(1, 2, 0).to("cpu"), boxes)
+        print()
+
+
+if __name__ == "__main__":
+    test()

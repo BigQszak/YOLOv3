@@ -116,3 +116,13 @@ $RECYCLE.BIN/
 
 # Jupter NB Checkpoints
 .ipynb_checkpoints/
+
+# Data
+/PASCAL_VOC
+/COCO
+/checkpoints
+
+# additional stuff
+/TODO.txt
+
+/test.py

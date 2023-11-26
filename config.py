@@ -1,17 +1,18 @@
 import albumentations as A
 import cv2
 import torch
+import os
 
 from albumentations.pytorch import ToTensorV2
 
-DATASET = "PASCAL_VOC"
+DATASET = "PASCAL_VOC"  # choose between PASCAL_VOC and COCO or other
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 NUM_WORKERS = 2
-BATCH_SIZE = 32
+BATCH_SIZE = 16  # 32
 IMAGE_SIZE = 416
-NUM_CLASSES = 20
-LEARNING_RATE = 1e-4
-WEIGHT_DECAY = 1e-4
+NUM_CLASSES = 20  # COCO has 80 classes
+LEARNING_RATE = 1e-3  # -5
+WEIGHT_DECAY = 1e-2  # -4
 NUM_EPOCHS = 100
 CONF_THRESHOLD = 0.6  # probability of object being detected is greater than this
 MAP_IOU_THRESH = 0.5
@@ -20,9 +21,13 @@ S = [IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8]  # grid size 13, 26, 5
 PIN_MEMORY = True
 LOAD_MODEL = False
 SAVE_MODEL = True
-CHECKPOINT_FILE = "checkpoint.pth.tar"
-IMG_DIR = DATASET + "/images/"
-LABEL_DIR = DATASET + "/labels/"
+CHECKPOINT_FILE = os.path.join(
+    os.path.dirname(__file__), "checkpoints", "best_checkpoint.pth.tar"
+)
+
+IMG_DIR = os.path.join(os.path.dirname(__file__), DATASET, "images/")
+LABEL_DIR = os.path.join(os.path.dirname(__file__), DATASET, "labels/")
+
 
 ANCHORS = [
     [(0.28, 0.22), (0.38, 0.48), (0.9, 0.78)],
@@ -47,7 +52,7 @@ train_transforms = A.Compose(
                 A.ShiftScaleRotate(
                     rotate_limit=20, p=0.5, border_mode=cv2.BORDER_CONSTANT
                 ),
-                A.IAAAffine(shear=15, p=0.5, mode="constant"),
+                A.Affine(shear=15, p=0.5, mode=0),  # mode="constant"
             ],
             p=1.0,
         ),
