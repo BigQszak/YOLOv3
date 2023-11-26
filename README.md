@@ -42,4 +42,4 @@ TO DO
 - [ ] Publish trained models
 - [x] Update paths 
 - [ ] Implement interactive scripts for argument parsing
-- [ ] Debug training
+- [x] Debug training
