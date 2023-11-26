@@ -36,7 +36,7 @@ TO DO
     (9 in total, 3 for each grid cell at each prediction scale)
 
 ## Useful links
-[How YOLOv3 Works?](https://www.youtube.com/watch?v=MKF1NHGgFfk&list=WL&index=42&t=778s) \
+[How YOLOv3 Works?](https://www.youtube.com/watch?v=MKF1NHGgFfk&list=WL&index=42&t=778s) <br />
 [Ultralytics YOLOv3](https://github.com/ultralytics/yolov3/tree/master)
 
 ## TO DO
