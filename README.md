@@ -22,7 +22,7 @@ $ pip install requirements.txt
 Edit the config.py file to match the setup you want to use. 
 Then run train.py
 
-### Results
+### Weights
 TO DO
 
 ## Main takes
@@ -37,9 +37,10 @@ TO DO
 
 ## Useful links
 [How YOLOv3 Works?](https://www.youtube.com/watch?v=MKF1NHGgFfk&list=WL&index=42&t=778s)
+[Ultralytics YOLOv3](https://github.com/ultralytics/yolov3/tree/master)
 
 ## TO DO
 - [ ] Publish trained models
 - [x] Update paths 
-- [ ] Implement interactive scripts for argument parsing
+- [x] Implement interactive scripts for argument parsing
 - [x] Debug training
