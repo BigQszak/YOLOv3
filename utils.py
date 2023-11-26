@@ -1,7 +1,10 @@
 import config
 import metrics
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+
+matplotlib.use("TKAgg")
 import numpy as np
 import torch
 import os
@@ -10,55 +13,6 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 # from dataset import YOLODataset
-
-
-def plot_image(image, boxes):
-    """Plots predicted bounding boxes on the image"""
-    cmap = plt.get_cmap("tab20b")
-    class_labels = (
-        config.COCO_LABELS if config.DATASET == "COCO" else config.PASCAL_CLASSES
-    )
-    colors = [cmap(i) for i in np.linspace(0, 1, len(class_labels))]
-    im = np.array(image)
-    height, width, _ = im.shape
-
-    # Create figure and axes
-    fig, ax = plt.subplots(1)
-    # Display the image
-    ax.imshow(im)
-
-    # box[0] is x midpoint, box[2] is width
-    # box[1] is y midpoint, box[3] is height
-
-    # Create a Rectangle patch
-    for box in boxes:
-        assert (
-            len(box) == 6
-        ), "box should contain class pred, confidence, x, y, width, height"
-        class_pred = box[0]
-        box = box[2:]
-        upper_left_x = box[0] - box[2] / 2
-        upper_left_y = box[1] - box[3] / 2
-        rect = patches.Rectangle(
-            (upper_left_x * width, upper_left_y * height),
-            box[2] * width,
-            box[3] * height,
-            linewidth=2,
-            edgecolor=colors[int(class_pred)],
-            facecolor="none",
-        )
-        # Add the patch to the Axes
-        ax.add_patch(rect)
-        plt.text(
-            upper_left_x * width,
-            upper_left_y * height,
-            s=class_labels[int(class_pred)],
-            color="white",
-            verticalalignment="top",
-            bbox={"color": colors[int(class_pred)], "pad": 0},
-        )
-
-    plt.show()
 
 
 def check_class_accuracy(model, loader, threshold):
@@ -177,6 +131,55 @@ def cells_to_bboxes(predictions, anchors, S, is_preds=True):
     return converted_bboxes.tolist()
 
 
+def plot_image(image, boxes):
+    """Plots predicted bounding boxes on the image"""
+    cmap = plt.get_cmap("tab20b")
+    class_labels = (
+        config.COCO_LABELS if config.DATASET == "COCO" else config.PASCAL_CLASSES
+    )
+    colors = [cmap(i) for i in np.linspace(0, 1, len(class_labels))]
+    im = np.array(image)
+    height, width, _ = im.shape
+
+    # Create figure and axes
+    fig, ax = plt.subplots(1)
+    # Display the image
+    ax.imshow(im)
+
+    # box[0] is x midpoint, box[2] is width
+    # box[1] is y midpoint, box[3] is height
+
+    # Create a Rectangle patch
+    for box in boxes:
+        assert (
+            len(box) == 6
+        ), "box should contain class pred, confidence, x, y, width, height"
+        class_pred = box[0]
+        box = box[2:]
+        upper_left_x = box[0] - box[2] / 2
+        upper_left_y = box[1] - box[3] / 2
+        rect = patches.Rectangle(
+            (upper_left_x * width, upper_left_y * height),
+            box[2] * width,
+            box[3] * height,
+            linewidth=2,
+            edgecolor=colors[int(class_pred)],
+            facecolor="none",
+        )
+        # Add the patch to the Axes
+        ax.add_patch(rect)
+        plt.text(
+            upper_left_x * width,
+            upper_left_y * height,
+            s=class_labels[int(class_pred)],
+            color="white",
+            verticalalignment="top",
+            bbox={"color": colors[int(class_pred)], "pad": 0},
+        )
+
+    plt.show()
+
+
 def plot_couple_examples(model, loader, thresh, iou_thresh, anchors):
     model.eval()
     x, y = next(iter(loader))
@@ -193,7 +196,7 @@ def plot_couple_examples(model, loader, thresh, iou_thresh, anchors):
 
         model.train()
 
-    for i in range(batch_size):
+    for i in range(5):  # batch_size
         nms_boxes = metrics.non_max_suppression(
             bboxes[i],
             iou_threshold=iou_thresh,

@@ -32,7 +32,7 @@ def train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors):
             y[2].to(config.DEVICE),
         )
 
-        with torch.cuda.amp.autocast_mode():
+        with torch.cuda.amp.autocast():  # with torch.cuda.amp.autocast_mode():
             out = model(x)
             loss = (
                 loss_fn(out[0], y0, scaled_anchors[0])

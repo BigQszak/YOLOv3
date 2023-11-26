@@ -193,14 +193,15 @@ def test():
 
         for i in range(y[0].shape[1]):
             anchor = scaled_anchors[i]
-            print(anchor.shape)
-            print(y[i].shape)
+            print(f"Anchor shape: {anchor.shape}")
+            print(f"y[i] shape: {y[i].shape}")
             boxes += utils.cells_to_bboxes(
                 y[i], is_preds=False, S=y[i].shape[2], anchors=anchor
             )[0]
         boxes = nms(boxes, iou_threshold=1, prob_threshold=0.7, box_format="midpoint")
-        print(boxes)
+        print(f"Boxes:", boxes)
         utils.plot_image(x[0].permute(1, 2, 0).to("cpu"), boxes)
+        print()
 
 
 if __name__ == "__main__":
